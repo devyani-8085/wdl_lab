@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Profile – PM Internship Scheme</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .greeting-bar {
+            background: linear-gradient(90deg, #1a56db, #0f3a8a);
+            color: white;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .greeting-bar span { font-weight: 700; }
+
+        select.form-control option:disabled { color: #94a3b8; }
+
+        textarea.form-control { min-height: 80px; resize: vertical; }
+
+        .form-submit-area { text-align: center; padding-top: 1rem; border-top: 1px solid var(--border); margin-top: 1.5rem; }
+
+        .form-submit-area p { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.7rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-icon">PM</div>
+            Internship Scheme
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+
+<!-- Greeting bar -->
+<div class="greeting-bar" id="greeting-bar">
+    Welcome back! Fill in your details to get <span>AI-powered internship recommendations</span>.
+</div>
+
+<div class="form-page">
+    <div class="form-container">
+
+        <!-- Progress -->
+        <div class="progress-bar-wrap">
+            <div class="progress-fill" id="progress-fill" style="width:0%;"></div>
+        </div>
+
+        <div class="form-card">
+            <div class="form-header">
+                <h2>🎓 Tell Us About Yourself</h2>
+                <p>Complete your profile to get personalized internship recommendations powered by AI</p>
+            </div>
+
+            <form id="internship-form" method="POST" action="process.php">
+
+                <!-- ===== PERSONAL INFO ===== -->
+                <div class="form-section-title">Personal Information</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name <span class="required">*</span></label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="you@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="mobile">Mobile Number</label>
+                        <input type="tel" id="mobile" name="mobile" class="form-control" placeholder="10-digit number" maxlength="10" />
+                    </div>
+                </div>
+
+                <!-- ===== EDUCATION ===== -->
+                <div class="form-section-title">Education Details</div>
+
+                <div class="form-group">
+                    <label class="form-label" for="education">Highest Qualification <span class="required">*</span></label>
+                    <select id="education" name="education" class="form-control" required onchange="updateProgress()">
+                        <option value="" disabled selected>-- Select your education --</option>
+                        <option value="10th">10th Pass</option>
+                        <option value="12th">12th Pass</option>
+                        <option value="ITI">ITI / Diploma</option>
+                        <option value="Diploma">Polytechnic Diploma</option>
+                        <option value="BCA">BCA</option>
+                        <option value="B.Sc">B.Sc</option>
+                        <option value="B.Tech">B.Tech / B.E.</option>
+                        <option value="BBA">BBA</option>
+                        <option value="B.Com">B.Com</option>
+                        <option value="BA">BA</option>
+                        <option value="MBA">MBA</option>
+                        <option value="M.Tech">M.Tech / M.E.</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="college">College / Institute Name</label>
+                    <input type="text" id="college" name="college" class="form-control" placeholder="e.g. IIT Delhi, Government Polytechnic Pune" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="year">Year of Passing</label>
+                        <select id="year" name="year" class="form-control">
+                            <option value="">-- Select year --</option>
+                            <option>2025</option>
+                            <option>2024</option>
+                            <option>2023</option>
+                            <option>2022</option>
+                            <option>2021</option>
+                            <option>Currently Studying</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="percentage">Percentage / CGPA</label>
+                        <input type="text" id="percentage" name="percentage" class="form-control" placeholder="e.g. 75% or 8.5 CGPA" />
+                    </div>
+                </div>
+
+                <!-- ===== SKILLS ===== -->
+                <div class="form-section-title">Skills <span class="required">*</span></div>
+                <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">Select all skills that apply to you (select minimum 1)</p>
+
+                <div class="skills-grid" id="skills-grid">
+                    <!-- Technical -->
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Python" id="sk-python" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-python"><span class="checkmark"></span> 🐍 Python</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Java" id="sk-java" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-java"><span class="checkmark"></span> ☕ Java</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="JavaScript" id="sk-js" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-js"><span class="checkmark"></span> 🌐 JavaScript</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="C/C++" id="sk-c" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-c"><span class="checkmark"></span> 💻 C / C++</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Data Analysis" id="sk-data" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-data"><span class="checkmark"></span> 📊 Data Analysis</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Machine Learning" id="sk-ml" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-ml"><span class="checkmark"></span> 🤖 Machine Learning</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Web Development" id="sk-web" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-web"><span class="checkmark"></span> 🔧 Web Development</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="UI/UX Design" id="sk-ux" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-ux"><span class="checkmark"></span> 🎨 UI/UX Design</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Excel/Spreadsheets" id="sk-excel" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-excel"><span class="checkmark"></span> 📑 Excel / Sheets</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Digital Marketing" id="sk-dm" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-dm"><span class="checkmark"></span> 📣 Digital Marketing</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Content Writing" id="sk-cw" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-cw"><span class="checkmark"></span> ✍️ Content Writing</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Sales/Marketing" id="sk-sm" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-sm"><span class="checkmark"></span> 💼 Sales/Marketing</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Accounting/Finance" id="sk-fin" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-fin"><span class="checkmark"></span> 💰 Accounting/Finance</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Electronics/Electrical" id="sk-ee" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-ee"><span class="checkmark"></span> ⚡ Electronics/EE</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Mechanical" id="sk-mech" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-mech"><span class="checkmark"></span> ⚙️ Mechanical</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="skills[]" value="Communication" id="sk-comm" class="skill-checkbox" onchange="updateProgress()" />
+                        <label class="skill-label" for="sk-comm"><span class="checkmark"></span> 🗣️ Communication</label>
+                    </div>
+                </div>
+
+                <!-- ===== INTEREST / SECTOR ===== -->
+                <div class="form-section-title">Area of Interest <span class="required">*</span></div>
+
+                <div class="form-group">
+                    <label class="form-label" for="interest">Preferred Sector</label>
+                    <select id="interest" name="interest" class="form-control" required onchange="updateProgress()">
+                        <option value="" disabled selected>-- Choose your interest area --</option>
+                        <option value="Information Technology">💻 Information Technology</option>
+                        <option value="Data Science & AI">🤖 Data Science & AI</option>
+                        <option value="Finance & Banking">🏦 Finance & Banking</option>
+                        <option value="Marketing & Advertising">📣 Marketing & Advertising</option>
+                        <option value="Manufacturing & Engineering">🏭 Manufacturing & Engineering</option>
+                        <option value="Healthcare & Pharma">🏥 Healthcare & Pharma</option>
+                        <option value="Education & Training">📚 Education & Training</option>
+                        <option value="Government & Public Sector">🏛️ Government & Public Sector</option>
+                        <option value="Retail & E-Commerce">🛒 Retail & E-Commerce</option>
+                        <option value="Media & Communication">📺 Media & Communication</option>
+                        <option value="Energy & Infrastructure">⚡ Energy & Infrastructure</option>
+                        <option value="Agriculture & Food">🌾 Agriculture & Food</option>
+                    </select>
+                </div>
+
+                <!-- ===== LOCATION ===== -->
+                <div class="form-section-title">Location Preferences</div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="city">City <span class="required">*</span></label>
+                        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mumbai, Delhi, Pune" required oninput="updateProgress()" />
+                        <div class="form-hint">Type your current city</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="state">State <span class="required">*</span></label>
+                        <select id="state" name="state" class="form-control" required onchange="updateProgress()">
+                            <option value="" disabled selected>-- Select state --</option>
+                            <option>Andhra Pradesh</option>
+                            <option>Bihar</option>
+                            <option>Chhattisgarh</option>
+                            <option>Delhi</option>
+                            <option>Gujarat</option>
+                            <option>Haryana</option>
+                            <option>Jharkhand</option>
+                            <option>Karnataka</option>
+                            <option>Kerala</option>
+                            <option>Madhya Pradesh</option>
+                            <option>Maharashtra</option>
+                            <option>Odisha</option>
+                            <option>Punjab</option>
+                            <option>Rajasthan</option>
+                            <option>Tamil Nadu</option>
+                            <option>Telangana</option>
+                            <option>Uttar Pradesh</option>
+                            <option>Uttarakhand</option>
+                            <option>West Bengal</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="relocation">Open to Relocation?</label>
+                    <select id="relocation" name="relocation" class="form-control">
+                        <option value="No">No – Local internships only</option>
+                        <option value="Yes">Yes – Open to any location</option>
+                        <option value="Remote">Prefer Remote / Work from Home</option>
+                    </select>
+                </div>
+
+                <!-- ===== ADDITIONAL ===== -->
+                <div class="form-section-title">Additional Details</div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="duration">Internship Duration</label>
+                        <select id="duration" name="duration" class="form-control">
+                            <option>1-3 months</option>
+                            <option>3-6 months</option>
+                            <option>6-12 months</option>
+                            <option>Any duration</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="stipend">Expected Stipend</label>
+                        <select id="stipend" name="stipend" class="form-control">
+                            <option>Any amount</option>
+                            <option>₹2,000 - ₹5,000/month</option>
+                            <option>₹5,000 - ₹10,000/month</option>
+                            <option>₹10,000 - ₹20,000/month</option>
+                            <option>₹20,000+/month</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="about">About Yourself (Optional)</label>
+                    <textarea id="about" name="about" class="form-control" placeholder="Briefly describe your goals, projects, or achievements..."></textarea>
+                </div>
+
+                <!-- ===== SUBMIT ===== -->
+                <div class="form-submit-area">
+                    <button type="submit" class="btn btn-primary btn-large" style="min-width:280px;" id="submit-btn">
+                        🔍 Find My Internships with AI →
+                    </button>
+                    <p>Your data is stored securely. Results appear in seconds.</p>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===== PREFILL USER ===== */
+window.addEventListener('DOMContentLoaded', () => {
+    const user = JSON.parse(localStorage.getItem('pm_logged_in') || 'null');
+    const bar  = document.getElementById('greeting-bar');
+
+    if (user) {
+        bar.innerHTML = `Welcome back, <span>${user.name}</span>! Fill in your details to get AI-powered recommendations.`;
+        document.getElementById('name').value  = user.name  || '';
+        document.getElementById('email').value = user.email || '';
+    }
+});
+
+/* ===== PROGRESS BAR ===== */
+function updateProgress() {
+    const fields = ['name','education','interest','city','state'];
+    const skillsChecked = document.querySelectorAll('input[name="skills[]"]:checked').length;
+
+    let filled = fields.filter(id => document.getElementById(id).value.trim() !== '').length;
+    if (skillsChecked > 0) filled++;
+
+    const pct = Math.min(100, Math.round((filled / (fields.length + 1)) * 100));
+    document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+/* ===== VALIDATION ONLY (NO PREVENT DEFAULT) ===== */
+document.getElementById('internship-form').addEventListener('submit', function(e) {
+
+    const skills = document.querySelectorAll('input[name="skills[]"]:checked');
+
+    if (skills.length === 0) {
+        alert('⚠️ Please select at least one skill.');
+        e.preventDefault(); // only stop if invalid
+        return;
+    }
+
+    // Show loading state
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '⏳ Finding Recommendations...';
+    btn.disabled = true;
+});
+
+/* ===== LOGOUT ===== */
+function logout() {
+    localStorage.removeItem('pm_logged_in');
+    window.location.href = 'index.html';
+}
+</script>
+
+
+</body>
+</html>

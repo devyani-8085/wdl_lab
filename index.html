@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PM Internship Scheme – AI Recommendations</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        /* Extra hero animation */
+        .hero-badge { animation: fadeDown 0.5s ease; }
+        .hero h1    { animation: fadeDown 0.6s ease 0.1s both; }
+        .hero p     { animation: fadeDown 0.6s ease 0.2s both; }
+        .hero-buttons { animation: fadeDown 0.6s ease 0.3s both; }
+        @keyframes fadeDown {
+            from { opacity:0; transform:translateY(-14px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* Marquee companies */
+        .marquee-section { padding: 2rem 0; background: white; overflow: hidden; border-bottom: 1px solid var(--border); }
+        .marquee-track   { display: flex; gap: 3rem; animation: scroll 25s linear infinite; white-space: nowrap; }
+        .marquee-track span { font-size: 1rem; font-weight: 600; color: var(--text-muted); flex-shrink: 0; }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* Testimonials */
+        .testimonials { padding: 4rem 1.5rem; background: #f8fafc; }
+        .testimonials-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+        .testimonial-card { background: white; border-radius: var(--radius-lg); padding: 1.5rem; border: 1px solid var(--border); }
+        .testimonial-card p { font-size: 0.92rem; color: var(--text); line-height: 1.7; margin-bottom: 1rem; }
+        .testimonial-author { display: flex; align-items: center; gap: 10px; }
+        .testimonial-author .avatar { width: 38px; height: 38px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: var(--primary); }
+        .testimonial-author .name { font-size: 0.9rem; font-weight: 600; }
+        .testimonial-author .role { font-size: 0.78rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-icon">PM</div>
+            Internship Scheme
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="login.html">Login</a></li>
+            <li><a href="form.html">Apply</a></li>
+        </ul>
+        <a href="login.html" class="btn btn-primary" style="padding:0.6rem 1.4rem; min-height:40px; font-size:0.95rem;">Get Started →</a>
+    </nav>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-content">
+        <span class="hero-badge">🇮🇳 Government of India Initiative</span>
+        <h1>Find Your Perfect Internship with AI</h1>
+        <p>PM Internship Scheme helps youth across India discover internship opportunities matched to their skills, location, and interests — powered by real-time data and AI recommendations.</p>
+        <div class="hero-buttons">
+            <a href="login.html" class="btn btn-white btn-large">🚀 Get Started — It's Free</a>
+            <a href="#how-it-works" class="btn btn-outline-white btn-large">How It Works</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STATS ===== -->
+<div class="stats-bar">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-num">1 Lakh+</div>
+            <div class="stat-label">Internships Available</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">500+</div>
+            <div class="stat-label">Partnered Companies</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">₹5,000</div>
+            <div class="stat-label">Monthly Stipend (Min)</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-num">28 States</div>
+            <div class="stat-label">Pan-India Presence</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MARQUEE ===== -->
+<div class="marquee-section">
+    <div class="marquee-track">
+        <span>Tata Consultancy Services</span>
+        <span>Infosys</span>
+        <span>Wipro</span>
+        <span>HCL Technologies</span>
+        <span>Tech Mahindra</span>
+        <span>Reliance Industries</span>
+        <span>HDFC Bank</span>
+        <span>Mahindra Group</span>
+        <span>Bajaj Finance</span>
+        <span>L&amp;T</span>
+        <span>ISRO</span>
+        <span>DRDO</span>
+        <!-- duplicate for seamless loop -->
+        <span>Tata Consultancy Services</span>
+        <span>Infosys</span>
+        <span>Wipro</span>
+        <span>HCL Technologies</span>
+        <span>Tech Mahindra</span>
+        <span>Reliance Industries</span>
+        <span>HDFC Bank</span>
+        <span>Mahindra Group</span>
+        <span>Bajaj Finance</span>
+        <span>L&amp;T</span>
+        <span>ISRO</span>
+        <span>DRDO</span>
+    </div>
+</div>
+
+<!-- ===== FEATURES ===== -->
+<section class="section">
+    <div class="section-title">
+        <h2>Why Choose PM Internship Scheme?</h2>
+        <p>Built for every Indian youth — simple, fast, and personalized</p>
+    </div>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3>AI-Powered Matching</h3>
+            <p>Our AI matches you with the best internships based on your skills, interests, and location.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📍</div>
+            <h3>Location-Based Results</h3>
+            <p>Find internships near you or anywhere in India with location-aware recommendations.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Stipend Details</h3>
+            <p>Every listing shows real stipend amounts so you know exactly what you'll earn.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Real-Time Data</h3>
+            <p>Updated internship listings from top companies updated daily.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3>Mobile Friendly</h3>
+            <p>Works perfectly on any phone — no app download required.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">✅</div>
+            <h3>Verified Companies</h3>
+            <p>All companies are verified under the PM Internship Scheme guidelines.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section steps" id="how-it-works">
+    <div class="section-title">
+        <h2>How It Works</h2>
+        <p>Get matched in just 3 simple steps</p>
+    </div>
+    <div class="steps-list">
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <h4>Create Your Profile</h4>
+                <p>Register with your name, education, skills and interests. Takes less than 2 minutes.</p>
+            </div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <h4>AI Analyzes Your Profile</h4>
+                <p>Our recommendation engine matches you with live internship listings from real companies using skill and location scoring.</p>
+            </div>
+        </div>
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <h4>Apply Directly</h4>
+                <p>Get top 5 personalized results with a direct apply link, stipend details, and "Why this recommendation" explanation.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials">
+    <div class="section-title">
+        <h2>What Interns Say</h2>
+        <p>Real stories from PM Internship Scheme beneficiaries</p>
+    </div>
+    <div class="testimonials-grid">
+        <div class="testimonial-card">
+            <p>"I got placed at Infosys through this platform. The AI recommendation explained exactly why I was a good fit — matched my Python and data skills perfectly!"</p>
+            <div class="testimonial-author">
+                <div class="avatar">PK</div>
+                <div>
+                    <div class="name">Priya Kumari</div>
+                    <div class="role">B.Tech CSE, Patna</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial-card">
+            <p>"Very easy to use. I don't know much about computers but this website was simple. Found an internship in my city with ₹8,000 stipend in just one day."</p>
+            <div class="testimonial-author">
+                <div class="avatar">RS</div>
+                <div>
+                    <div class="name">Ravi Sharma</div>
+                    <div class="role">Diploma Student, Jaipur</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonial-card">
+            <p>"The 'Why this recommendation' feature helped me understand what skills I need to improve. Got placed at L&T after updating my profile. Highly recommended!"</p>
+            <div class="testimonial-author">
+                <div class="avatar">AN</div>
+                <div>
+                    <div class="name">Anita Nair</div>
+                    <div class="role">BBA Student, Kochi</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="cta-section">
+    <h2>Ready to Find Your Internship?</h2>
+    <p>Join over 50,000 students who found their first internship through PM Internship Scheme</p>
+    <a href="login.html" class="btn btn-white btn-large">Start Now — It's Free 🚀</a>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <p><strong>PM Internship Scheme</strong> | Government of India Initiative | &copy; 2025</p>
+    <p style="margin-top: 0.4rem; font-size: 0.8rem;">Powered by AI Recommendation Engine | Data updated daily</p>
+</footer>
+
+</body>
+</html>

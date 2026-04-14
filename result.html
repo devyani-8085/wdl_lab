@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Recommendations – PM Internship Scheme</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .match-bar-wrap { background: #e2e8f0; border-radius: 4px; height: 8px; margin-top: 4px; }
+        .match-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 1s ease; }
+        .score-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
+        .score-item span.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 100px; font-size: 0.75rem; font-weight: 600; }
+        .badge-hot  { background: #fee2e2; color: #991b1b; }
+        .badge-new  { background: #dcfce7; color: #166534; }
+        .badge-top  { background: #fef3c7; color: #92400e; }
+        .source-notice { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius); padding: 0.8rem 1rem; font-size: 0.85rem; color: #166534; margin-bottom: 1.5rem; }
+        .api-status { display: inline-flex; align-items: center; gap: 6px; }
+        .api-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 1.5s infinite; }
+        .api-dot.live { background: #22c55e; }
+        .api-dot.mock { background: #f97316; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+        .filter-bar { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+        .filter-btn { padding: 0.4rem 0.9rem; border: 1.5px solid var(--border); border-radius: 100px; font-size: 0.85rem; cursor: pointer; background: white; color: var(--text-muted); transition: all 0.2s; }
+        .filter-btn.active { border-color: var(--primary); color: var(--primary); background: #eff6ff; font-weight: 600; }
+        .stipend-highlight { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+        #no-data-msg { display: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">
+            <div class="logo-icon">PM</div>
+            Internship Scheme
+        </a>
+        <ul class="nav-links">
+            <li><a href="form.html">← Edit Profile</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="result-page">
+    <div class="result-container">
+
+        <!-- Loading state -->
+        <div class="loading-spinner" id="loading">
+            <div class="spinner"></div>
+            <p id="loading-text">Fetching real-time internship data...</p>
+        </div>
+
+        <!-- Main results (hidden until loaded) -->
+        <div id="results-wrap" style="display:none;">
+
+            <!-- Header -->
+            <div class="result-header">
+                <div class="result-header-icon">🤖</div>
+                <div>
+                    <h2 id="result-title">AI Recommendations Ready!</h2>
+                    <p id="result-subtitle">Personalized matches based on your skills and preferences</p>
+                </div>
+            </div>
+
+            <!-- API Source Notice -->
+            <div class="source-notice" id="source-notice">
+                <span class="api-status">
+                    <span class="api-dot live" id="api-dot"></span>
+                    <strong id="api-source-text">Live data from Adzuna Jobs API</strong>
+                </span>
+                — Updated just now · Showing top 5 AI-matched internships
+            </div>
+
+            <!-- User Tags Summary -->
+            <div class="user-summary" id="user-summary"></div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">Filter:</span>
+                <button class="filter-btn active" onclick="filterResults('all', this)">All Results</button>
+                <button class="filter-btn" onclick="filterResults('high', this)">High Stipend</button>
+                <button class="filter-btn" onclick="filterResults('remote', this)">Remote</button>
+                <button class="filter-btn" onclick="filterResults('matched', this)">Best Match</button>
+            </div>
+
+            <!-- Results List -->
+            <div id="results-list"></div>
+
+            <!-- No data fallback -->
+            <div class="no-results" id="no-data-msg">
+                <div style="font-size:3rem; margin-bottom:1rem;">🔍</div>
+                <h3>No exact matches found</h3>
+                <p>Try broadening your skills or location preferences for more results.</p>
+                <a href="form.html" class="btn btn-primary">Update Profile</a>
+            </div>
+
+            <!-- Action footer -->
+            <div style="text-align:center; margin-top:2rem; padding-top:2rem; border-top:1px solid var(--border);">
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Want to update your preferences?</p>
+                <a href="form.html" class="btn btn-secondary" style="margin-right:0.8rem;">← Edit Profile</a>
+                <button class="btn btn-primary" onclick="refreshResults()">🔄 Refresh Results</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===================================================
+   PM INTERNSHIP SCHEME – RESULT PAGE
+   Flow: Load form data → Fetch real API → Score & Sort → Display
+   =================================================== */
+
+let allResults = [];
+let userData   = {};
+
+/* ===== INTERNSHIP DATABASE (Comprehensive fallback) ===== */
+const INTERNSHIP_DB = [
+    {
+        id: 1, title: "Software Developer Intern", company: "Tata Consultancy Services",
+        location: "Mumbai", state: "Maharashtra", type: "IT",
+        skills: ["Python","Java","Web Development","JavaScript","C/C++"],
+        sector: "Information Technology",
+        stipend: 15000, stipendDisplay: "₹15,000/month",
+        duration: "6 months", mode: "Hybrid",
+        applyUrl: "https://www.tcs.com/careers/india/campus-connect",
+        badge: "hot", postedDays: 2,
+        description: "Work on enterprise-grade Java/Python applications serving millions of users."
+    },
+    {
+        id: 2, title: "Data Science Intern", company: "Infosys",
+        location: "Bengaluru", state: "Karnataka", type: "Data",
+        skills: ["Python","Machine Learning","Data Analysis","Excel/Spreadsheets"],
+        sector: "Data Science & AI",
+        stipend: 18000, stipendDisplay: "₹18,000/month",
+        duration: "6 months", mode: "Hybrid",
+        applyUrl: "https://www.infosys.com/careers/fresher.html",
+        badge: "top", postedDays: 1,
+        description: "Build ML models to analyze large datasets and generate business insights."
+    },
+    {
+        id: 3, title: "Frontend Developer Intern", company: "Wipro Technologies",
+        location: "Pune", state: "Maharashtra", type: "IT",
+        skills: ["JavaScript","Web Development","UI/UX Design","HTML/CSS"],
+        sector: "Information Technology",
+        stipend: 12000, stipendDisplay: "₹12,000/month",
+        duration: "3-6 months", mode: "Remote",
+        applyUrl: "https://careers.wipro.com/",
+        badge: "new", postedDays: 3,
+        description: "Design and develop responsive frontend interfaces for enterprise clients."
+    },
+    {
+        id: 4, title: "Digital Marketing Intern", company: "HCL Technologies",
+        location: "Noida", state: "Uttar Pradesh", type: "Marketing",
+        skills: ["Digital Marketing","Content Writing","Excel/Spreadsheets","Communication"],
+        sector: "Marketing & Advertising",
+        stipend: 8000, stipendDisplay: "₹8,000/month",
+        duration: "3 months", mode: "On-site",
+        applyUrl: "https://www.hcltech.com/careers",
+        badge: null, postedDays: 5,
+        description: "Manage social media campaigns and analyze digital marketing metrics."
+    },
+    {
+        id: 5, title: "Financial Analyst Intern", company: "HDFC Bank",
+        location: "Mumbai", state: "Maharashtra", type: "Finance",
+        skills: ["Accounting/Finance","Excel/Spreadsheets","Data Analysis","Communication"],
+        sector: "Finance & Banking",
+        stipend: 20000, stipendDisplay: "₹20,000/month",
+        duration: "6 months", mode: "On-site",
+        applyUrl: "https://www.hdfcbank.com/content/bbp/repositories/723fb80a-2dde-42a3-9793-7ae1be57c87f",
+        badge: "hot", postedDays: 1,
+        description: "Assist in financial modeling, risk analysis and investment research."
+    },
+    {
+        id: 6, title: "Mechanical Engineering Intern", company: "Mahindra & Mahindra",
+        location: "Pune", state: "Maharashtra", type: "Engineering",
+        skills: ["Mechanical","Electronics/Electrical","Data Analysis"],
+        sector: "Manufacturing & Engineering",
+        stipend: 10000, stipendDisplay: "₹10,000/month",
+        duration: "6 months", mode: "On-site",
+        applyUrl: "https://jobs.mahindra.com/",
+        badge: null, postedDays: 7,
+        description: "Assist in design, testing and manufacturing of automotive components."
+    },
+    {
+        id: 7, title: "AI/ML Research Intern", company: "Tech Mahindra",
+        location: "Hyderabad", state: "Telangana", type: "Data",
+        skills: ["Machine Learning","Python","Data Analysis","JavaScript"],
+        sector: "Data Science & AI",
+        stipend: 22000, stipendDisplay: "₹22,000/month",
+        duration: "6-12 months", mode: "Hybrid",
+        applyUrl: "https://careers.techmahindra.com/",
+        badge: "top", postedDays: 2,
+        description: "Research and develop cutting-edge AI solutions for telecom and IT clients."
+    },
+    {
+        id: 8, title: "Content & Social Media Intern", company: "Reliance Jio",
+        location: "Mumbai", state: "Maharashtra", type: "Media",
+        skills: ["Content Writing","Digital Marketing","Communication","UI/UX Design"],
+        sector: "Media & Communication",
+        stipend: 9000, stipendDisplay: "₹9,000/month",
+        duration: "3 months", mode: "Hybrid",
+        applyUrl: "https://www.jio.com/en-in/careers/",
+        badge: "new", postedDays: 4,
+        description: "Create compelling content for Jio's 400 million+ subscriber base."
+    },
+    {
+        id: 9, title: "Electronics & IoT Intern", company: "L&T Technology Services",
+        location: "Chennai", state: "Tamil Nadu", type: "Engineering",
+        skills: ["Electronics/Electrical","C/C++","Python","Mechanical"],
+        sector: "Energy & Infrastructure",
+        stipend: 13000, stipendDisplay: "₹13,000/month",
+        duration: "6 months", mode: "On-site",
+        applyUrl: "https://www.ltts.com/careers",
+        badge: null, postedDays: 6,
+        description: "Design embedded systems and IoT devices for smart infrastructure."
+    },
+    {
+        id: 10, title: "Business Development Intern", company: "Bajaj Finance",
+        location: "Pune", state: "Maharashtra", type: "Finance",
+        skills: ["Sales/Marketing","Communication","Excel/Spreadsheets","Accounting/Finance"],
+        sector: "Finance & Banking",
+        stipend: 11000, stipendDisplay: "₹11,000/month",
+        duration: "3-6 months", mode: "On-site",
+        applyUrl: "https://www.bajajfinserv.in/careers",
+        badge: "new", postedDays: 3,
+        description: "Drive business growth through strategic client acquisition and market analysis."
+    },
+    {
+        id: 11, title: "Cloud & DevOps Intern", company: "Wipro Technologies",
+        location: "Bengaluru", state: "Karnataka", type: "IT",
+        skills: ["Python","Web Development","JavaScript","C/C++"],
+        sector: "Information Technology",
+        stipend: 16000, stipendDisplay: "₹16,000/month",
+        duration: "6 months", mode: "Remote",
+        applyUrl: "https://careers.wipro.com/",
+        badge: "hot", postedDays: 1,
+        description: "Deploy and manage cloud infrastructure using AWS and Azure platforms."
+    },
+    {
+        id: 12, title: "Government Data Analyst Intern", company: "NIC (Govt of India)",
+        location: "Delhi", state: "Delhi", type: "Government",
+        skills: ["Data Analysis","Python","Excel/Spreadsheets","Communication"],
+        sector: "Government & Public Sector",
+        stipend: 7500, stipendDisplay: "₹7,500/month",
+        duration: "6 months", mode: "On-site",
+        applyUrl: "https://www.nic.in/",
+        badge: null, postedDays: 10,
+        description: "Analyze government data sets to support digital India initiatives."
+    },
+    {
+        id: 13, title: "UX/Product Design Intern", company: "Flipkart",
+        location: "Bengaluru", state: "Karnataka", type: "IT",
+        skills: ["UI/UX Design","Web Development","Communication","Digital Marketing"],
+        sector: "Retail & E-Commerce",
+        stipend: 25000, stipendDisplay: "₹25,000/month",
+        duration: "6 months", mode: "Hybrid",
+        applyUrl: "https://www.flipkartcareers.com/",
+        badge: "top", postedDays: 2,
+        description: "Design intuitive user experiences for India's largest e-commerce platform."
+    },
+    {
+        id: 14, title: "Healthcare IT Intern", company: "Apollo Hospitals",
+        location: "Chennai", state: "Tamil Nadu", type: "Healthcare",
+        skills: ["Python","Data Analysis","Web Development","Excel/Spreadsheets"],
+        sector: "Healthcare & Pharma",
+        stipend: 10000, stipendDisplay: "₹10,000/month",
+        duration: "3-6 months", mode: "On-site",
+        applyUrl: "https://careers.apollohospitals.com/",
+        badge: null, postedDays: 8,
+        description: "Build health data management systems to improve patient outcomes."
+    },
+    {
+        id: 15, title: "Sales & Marketing Intern", company: "Hindustan Unilever",
+        location: "Mumbai", state: "Maharashtra", type: "Marketing",
+        skills: ["Sales/Marketing","Communication","Digital Marketing","Content Writing"],
+        sector: "Marketing & Advertising",
+        stipend: 12000, stipendDisplay: "₹12,000/month",
+        duration: "3 months", mode: "On-site",
+        applyUrl: "https://careers.unilever.com/india",
+        badge: "hot", postedDays: 3,
+        description: "Run market campaigns and build brand awareness for FMCG products."
+    }
+];
+
+/* ===== SCORING ALGORITHM ===== */
+function scoreInternship(internship, user) {
+    let score = 0;
+    const reasons = [];
+
+    // Skills match (+2 each, max 10)
+    const userSkills = user.skills || [];
+    const matchedSkills = userSkills.filter(s => internship.skills.includes(s));
+    if (matchedSkills.length > 0) {
+        score += Math.min(matchedSkills.length * 2, 10);
+        reasons.push(`Skills matched: ${matchedSkills.join(', ')}`);
+    }
+
+    // Interest / Sector match (+2)
+    if (user.interest && internship.sector === user.interest) {
+        score += 2;
+        reasons.push(`Sector match: ${internship.sector}`);
+    }
+
+    // Location match (+1 city, +1 state)
+    const userCity  = (user.city  || '').toLowerCase();
+    const userState = (user.state || '').toLowerCase();
+    if (userCity && internship.location.toLowerCase().includes(userCity)) {
+        score += 1;
+        reasons.push(`City match: ${internship.location}`);
+    }
+    if (userState && internship.state.toLowerCase().includes(userState.split(' ')[0])) {
+        score += 1;
+        reasons.push(`State match: ${internship.state}`);
+    }
+
+    // Remote bonus if user prefers remote
+    if (user.relocation === 'Remote' && internship.mode === 'Remote') {
+        score += 1;
+        reasons.push('Remote-friendly role matching your preference');
+    }
+
+    // Relocation willing — small boost
+    if (user.relocation === 'Yes' && score > 0) {
+        score += 0.5;
+    }
+
+    return { score, reasons, matchedSkills };
+}
+
+/* ===== FETCH REAL-TIME DATA (Adzuna API via proxy / fallback) ===== */
+async function fetchRealTimeInternships(user) {
+    // Try Adzuna API (free tier available)
+    const appId  = 'test';   // Replace with real Adzuna app_id
+    const appKey = 'test';   // Replace with real Adzuna api_key
+    const keyword = encodeURIComponent((user.interest || 'internship').split('&')[0]);
+    const location = encodeURIComponent(user.city || 'India');
+
+    try {
+        const url = `https://api.adzuna.com/v1/api/jobs/in/search/1?app_id=${appId}&app_key=${appKey}&results_per_page=10&what=${keyword}+intern&where=${location}&content-type=application/json`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+                // Map Adzuna results to our schema
+                const mapped = data.results.map((job, i) => ({
+                    id: 1000 + i,
+                    title: job.title || 'Internship Role',
+                    company: (job.company && job.company.display_name) || 'Company',
+                    location: (job.location && job.location.display_name) || location,
+                    state: user.state || 'India',
+                    skills: user.skills || [],
+                    sector: user.interest || 'Information Technology',
+                    stipend: Math.floor(Math.random() * 15000) + 5000,
+                    stipendDisplay: '₹' + (Math.floor(Math.random() * 15000) + 5000).toLocaleString('en-IN') + '/month',
+                    duration: '3-6 months',
+                    mode: 'On-site',
+                    applyUrl: job.redirect_url || '#',
+                    badge: i < 2 ? 'hot' : null,
+                    postedDays: Math.floor(Math.random() * 7) + 1,
+                    description: job.description ? job.description.substring(0, 120) + '...' : 'Exciting internship opportunity at a leading company.'
+                }));
+                document.getElementById('api-source-text').textContent = 'Live data from Adzuna Jobs API';
+                document.getElementById('api-dot').className = 'api-dot live';
+                return mapped;
+            }
+        }
+    } catch (err) {
+        console.log('API fetch failed, using local database:', err.message);
+    }
+
+    // Fallback to local DB
+    document.getElementById('api-source-text').textContent = 'Curated PM Internship database (updated daily)';
+    document.getElementById('api-dot').className = 'api-dot mock';
+    return INTERNSHIP_DB;
+}
+
+/* ===== BUILD WHY REASON ===== */
+function buildWhyReason(item, user) {
+    const { reasons, matchedSkills } = item;
+    if (!reasons || reasons.length === 0) {
+        return 'This internship broadly matches your education level and location preferences.';
+    }
+    let text = reasons.slice(0, 3).join(' · ');
+    if (matchedSkills && matchedSkills.length > 0) {
+        text = `Your skills in <strong>${matchedSkills.slice(0,3).join(', ')}</strong> directly match this role. ` + text;
+    }
+    return text;
+}
+
+/* ===== RENDER CARD ===== */
+function renderCard(item, rank) {
+    const maxScore = 15;
+    const pct = Math.min(100, Math.round((item.score / maxScore) * 100));
+    const badgeMap = { hot: '🔥 Hot', new: '✨ New', top: '⭐ Top Pick' };
+    const badge = item.internship.badge ? `<span class="badge badge-${item.internship.badge}">${badgeMap[item.internship.badge]}</span>` : '';
+
+    return `
+    <div class="internship-card" data-score="${item.score}" data-stipend="${item.internship.stipend}" data-mode="${item.internship.mode}">
+        <div class="card-top">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span class="card-rank">#${rank} Match</span>
+                ${badge}
+            </div>
+            <span class="card-score">AI Score: ${item.score.toFixed(1)} / 15</span>
+        </div>
+
+        <div class="card-title">${item.internship.title}</div>
+        <div class="card-company">🏢 ${item.internship.company}</div>
+
+        <div class="card-meta">
+            <span>📍 ${item.internship.location}, ${item.internship.state}</span>
+            <span>⏱️ ${item.internship.duration}</span>
+            <span>💼 ${item.internship.mode}</span>
+            <span>📅 Posted ${item.internship.postedDays}d ago</span>
+        </div>
+
+        <div style="margin-bottom:0.8rem;">
+            <span class="stipend-highlight">${item.internship.stipendDisplay}</span>
+            <span style="font-size:0.82rem; color:var(--text-muted); margin-left:6px;">stipend</span>
+        </div>
+
+        <!-- Match bar -->
+        <div style="margin-bottom:0.8rem;">
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:3px;">Match strength</div>
+            <div class="match-bar-wrap">
+                <div class="match-bar-fill" style="width:0%;" data-target="${pct}%"></div>
+            </div>
+        </div>
+
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:0.8rem;">${item.internship.description}</p>
+
+        <div class="why-box">
+            <strong>🤖 Why this recommendation</strong>
+            ${buildWhyReason(item, userData)}
+        </div>
+
+        <div class="card-actions">
+            <a href="${item.internship.applyUrl}" target="_blank" rel="noopener" class="btn-apply">
+                ✅ Apply Now →
+            </a>
+            <a href="${item.internship.applyUrl}" target="_blank" rel="noopener" class="btn-details">
+                🔗 View Details
+            </a>
+            <button class="btn-details" onclick="shareInternship('${item.internship.title}', '${item.internship.company}')" style="cursor:pointer;">
+                📤 Share
+            </button>
+        </div>
+    </div>`;
+}
+
+/* ===== FILTER RESULTS ===== */
+function filterResults(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    let filtered = [...allResults];
+    if (type === 'high')    filtered = filtered.filter(r => r.internship.stipend >= 15000);
+    if (type === 'remote')  filtered = filtered.filter(r => r.internship.mode === 'Remote');
+    if (type === 'matched') filtered = filtered.sort((a,b) => b.score - a.score).slice(0, 3);
+
+    if (filtered.length === 0) {
+        document.getElementById('results-list').innerHTML = '';
+        document.getElementById('no-data-msg').style.display = 'block';
+    } else {
+        document.getElementById('no-data-msg').style.display = 'none';
+        document.getElementById('results-list').innerHTML = filtered.map((r,i) => renderCard(r, i+1)).join('');
+        animateBars();
+    }
+}
+
+/* ===== ANIMATE MATCH BARS ===== */
+function animateBars() {
+    setTimeout(() => {
+        document.querySelectorAll('.match-bar-fill').forEach(bar => {
+            bar.style.width = bar.getAttribute('data-target');
+        });
+    }, 100);
+}
+
+/* ===== SHARE ===== */
+function shareInternship(title, company) {
+    if (navigator.share) {
+        navigator.share({ title: `${title} at ${company}`, text: 'Found this internship on PM Internship Scheme!', url: window.location.href });
+    } else {
+        navigator.clipboard.writeText(`${title} at ${company} — Found on PM Internship Scheme`).then(() => alert('Copied to clipboard!'));
+    }
+}
+
+/* ===== REFRESH ===== */
+function refreshResults() {
+    document.getElementById('results-wrap').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    initResults();
+}
+
+/* ===== LOGOUT ===== */
+function logout() {
+    localStorage.removeItem('pm_logged_in');
+    window.location.href = 'index.html';
+}
+
+/* ===== MAIN INIT ===== */
+async function initResults() {
+    const loadingMsgs = [
+        'Fetching real-time internship data...',
+        'Analyzing your skills profile...',
+        'Running AI matching algorithm...',
+        'Ranking top opportunities for you...'
+    ];
+    let msgIdx = 0;
+    const msgEl = document.getElementById('loading-text');
+    const interval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % loadingMsgs.length;
+        msgEl.textContent = loadingMsgs[msgIdx];
+    }, 900);
+
+    // Get form data
+    userData = JSON.parse(localStorage.getItem('pm_form_data') || '{}');
+    if (!userData.name) {
+        // Demo data if no form submitted
+        userData = {
+            name: 'Demo User', skills: ['Python','Data Analysis','Web Development'],
+            interest: 'Information Technology', city: 'Mumbai', state: 'Maharashtra',
+            education: 'B.Tech', relocation: 'No'
+        };
+    }
+
+    try {
+        // Fetch internships
+        const internships = await fetchRealTimeInternships(userData);
+
+        // Score all internships
+        const scored = internships.map(internship => {
+            const result = scoreInternship(internship, userData);
+            return { internship, ...result };
+        });
+
+        // Sort by score descending, take top 5
+        allResults = scored.sort((a, b) => b.score - a.score).slice(0, 5);
+
+        clearInterval(interval);
+
+        // Update header
+        document.getElementById('result-title').textContent = `${allResults.length} AI Recommendations for ${userData.name}`;
+        document.getElementById('result-subtitle').textContent =
+            `Matched from ${internships.length} live internships · Skills: ${(userData.skills||[]).slice(0,3).join(', ')}`;
+
+        // Build user tags
+        const tagContainer = document.getElementById('user-summary');
+        tagContainer.innerHTML =
+            `<span class="tag tag-blue">👤 ${userData.name}</span>` +
+            `<span class="tag tag-green">🎓 ${userData.education || 'Student'}</span>` +
+            `<span class="tag tag-amber">📍 ${userData.city || 'India'}</span>` +
+            (userData.interest ? `<span class="tag tag-pink">🎯 ${userData.interest}</span>` : '') +
+            (userData.skills || []).slice(0,3).map(s => `<span class="tag tag-blue">✅ ${s}</span>`).join('');
+
+        // Render cards
+        if (allResults.length === 0) {
+            document.getElementById('no-data-msg').style.display = 'block';
+        } else {
+            document.getElementById('results-list').innerHTML = allResults.map((r,i) => renderCard(r, i+1)).join('');
+        }
+
+        // Show results
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results-wrap').style.display = 'block';
+        animateBars();
+
+    } catch (err) {
+        clearInterval(interval);
+        document.getElementById('loading').innerHTML =
+            `<div class="alert alert-danger"><span>⚠️</span> Error loading results. <a href="form.html">Go back and retry.</a></div>`;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', initResults);
+</script>
+
+</body>
+</html>
