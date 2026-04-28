@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internship Recommendation System</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(to right, #007bff, #6610f2);
+      color: white;
+    }
+
+    .card {
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+  <div class="card p-4 shadow">
+    <h2 class="text-center text-primary">AI Internship Recommendation System</h2>
+
+    <form onsubmit="return recommendInternship()">
+
+      <!-- Name -->
+      <div class="mb-3">
+        <input type="text" id="name" class="form-control" placeholder="Enter your name">
+      </div>
+
+      <!-- Skills -->
+      <div class="mb-3">
+        <label class="text-dark">Select Skill:</label>
+        <select id="skill" class="form-control">
+          <option value="">--Select Skill--</option>
+          <option value="web">Web Development</option>
+          <option value="python">Python</option>
+          <option value="ai">AI / ML</option>
+        </select>
+      </div>
+
+      <!-- Education -->
+      <div class="mb-3">
+        <label class="text-dark">Education:</label>
+        <select id="education" class="form-control">
+          <option value="">--Select--</option>
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </div>
+
+      <!-- Location -->
+      <div class="mb-3">
+        <input type="text" id="location" class="form-control" placeholder="Enter Location">
+      </div>
+
+      <!-- Submit -->
+      <div class="text-center">
+        <button class="btn btn-primary">Get Recommendation</button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Output -->
+  <div class="mt-4 text-center">
+    <h3 id="result"></h3>
+    <ul id="list" class="list-group"></ul>
+  </div>
+
+</div>
+
+<script>
+
+function recommendInternship() {
+
+  let name = document.getElementById("name").value;
+  let skill = document.getElementById("skill").value;
+  let education = document.getElementById("education").value;
+  let location = document.getElementById("location").value;
+
+  if (name == "" || skill == "" || education == "" || location == "") {
+    alert("Please fill all fields!");
+    return false;
+  }
+
+  let recommendations = [];
+
+  // Rule-based logic (AI simulation)
+  if (skill == "web") {
+    recommendations = [
+      "Frontend Developer Intern",
+      "Web Design Intern",
+      "UI/UX Intern"
+    ];
+  }
+  else if (skill == "python") {
+    recommendations = [
+      "Python Developer Intern",
+      "Backend Intern",
+      "Data Analysis Intern"
+    ];
+  }
+  else if (skill == "ai") {
+    recommendations = [
+      "AI Intern",
+      "Machine Learning Intern",
+      "Data Science Intern"
+    ];
+  }
+
+  // Display result
+  document.getElementById("result").innerHTML =
+    "Hello " + name + ", here are your recommended internships:";
+
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  recommendations.forEach(function(item) {
+    let li = document.createElement("li");
+    li.className = "list-group-item";
+    li.innerHTML = item + " (" + location + ")";
+    list.appendChild(li);
+  });
+
+  return false;
+}
+
+</script>
+
+</body>
+</html>
